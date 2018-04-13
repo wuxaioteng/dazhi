@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            user-select:none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #fff;
+            background:url(./img/a6949a868473e566b8926b5989c3804287f91db51e1a08-WAa6Nm_fw658.jpg)center;
+
+        }
+
+        .menu {
+            width: 100%;
+            height: 50px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0, 0, 0, 0.67);
+            z-index: 99;
+            line-height:50px;
+            color:greenyellow;
+        }
+
+        .scene {
+            width: 1000px;
+            height: 100%;
+            background-size:auto 110%;
+            margin: 0 auto;
+            position: relative;
+            box-shadow:0 0 10px #000;
+            border:10px solid rgba(0, 0, 0, 0.49);
+            border-top:0;
+            border-bottom:0;
+            background-clip: padding-box;
+            background: #838dff;
+            background: url("./img/aa.jpg") center /cover;
+        }
+
+        .control {
+            width: 300px;
+            height: 100px;
+            background: rgba(250, 250, 250, 0.58);
+            position: fixed;
+            left: calc(50% - 150px);
+            top: calc(50% - 50px);
+            z-index: 99;
+            border:10px solid #838dff;
+            border-radius: 30px;
+        }
+
+        .control div{
+            width: 180px;
+            height: 40px;
+            text-align: center;
+            line-height: 40px;
+            cursor: pointer;
+            margin: 30px auto;
+            font-size: 16px;
+            color:#fff;
+            background: #838dff;
+            border-radius:20px;
+        }
+        .control div:active{
+            box-shadow: 0 0 5px #000;
+
+        }
+        .pause,.end{
+            display: none;
+        }
+
+        .letter {
+            width: 100px;
+            height: 100px;
+            border: 1px solid #000000;
+            text-align: center;
+            line-height: 100px;
+            font-size: 60px;
+            color: #000;
+            position: absolute;
+            border-radius: 50%;
+            background:#fff;
+            font-weight: bold;
+            text-shadow:0 0 5px gold;
+            box-shadow: 0 0 5px 5px #fff;
+        }
+        @keyframes fadeOut {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .fadeOut {
+            animation: fadeOut .5s linear;
+        }
+    </style>
+</head>
+<body>
+<div class="menu">
+    <div class="state">
+        <span>关卡</span><span class="statenum">1</span>
+    </div>
+    <div class="life">
+        <span>生命</span><span class="lifenum">5</span>
+    </div>
+    <div class="scor">
+        <span>得分</span><span class="scornum">0</span>
+    </div>
+</div>
+<div class="control">
+    <div class="start">开始</div>
+    <div class="pause">暂停</div>
+    <div class="end">结束</div>
+</div>
+<div class="scene"></div>
+</body>
+<script>
+    let start=document.querySelector(".start");
+    let control=document.querySelector(".control");
+    let scene=document.querySelector(".scene");
+    let obj={};
+    let scor=0,life=5,state=1;
+    let scorEle=document.querySelector(".scornum");
+    let lifeEle=document.querySelector(".lifenum");
+    let stateEle=document.querySelector(".statenum");
+    let speed=5;
+    start.onclick=function(){
+        control.classList.add("fadeOut");
+        for(let i=0;i<3;i++){
+            createLetter();
+        }
+        console.log(obj)
+    };
+    control.addEventListener("animationend",function(){
+       this.style.display="none";
+    });
+    function checkPos(left){
+        for(let i in obj){
+            if(left>obj[i].randomLeft-100&&left<obj[i].randomLeft+100){
+                return true;
+            }
+        }
+    }
+    function createLetter(){
+      let newdiv=document.createElement("div");
+      newdiv.classList.add("letter");
+      let randomLeft;
+      do {
+          randomLeft=Math.random() * 900;
+      }while(checkPos(randomLeft));
+      let randomTop=-(Math.random()*100+100);
+      newdiv.style.left=randomLeft+"px";
+      newdiv.style.top=randomTop+"px";
+      let randomNum,letter;
+      do {
+          randomNum=Math.floor(Math.random() * 26) + 65;
+          letter=String.fromCharCode(randomNum);
+      }while(obj[letter]);
+      obj[letter]={randomLeft,randomTop,el:newdiv};
+      newdiv.innerHTML=letter;
+      scene.appendChild(newdiv);
+    }
+    let st=setInterval(function(){
+      for(let i in obj){
+        let top=obj[i].randomTop;
+        top+=speed;
+        obj[i].randomTop=top;
+        obj[i].el.style.top=top+"px";
+        if(top>window.innerHeight){
+            scene.removeChild(obj[i].el);
+            delete obj[i];
+            createLetter();
+            life--;
+            lifeEle.innerHTML=life;
+            if(life===0){
+                clearInterval(st);
+            }
+        }
+      }
+    },30);
+    window.onkeydown=function(e){
+        let kc=e.keyCode;
+        let letter=String.fromCharCode(kc);
+        if(obj[letter]){
+           scene.removeChild(obj[letter].el);
+           delete obj[letter];
+           createLetter();
+           scor++;
+           scorEle.innerHTML=scor;
+           if(scor%10===0){
+               state++;
+               stateEle.innerHTML=state;
+               if(state<=3){
+                   createLetter();
+               }else{
+                   speed+=3;
+               }
+           }
+        }
+    }
+</script>
+</html>
